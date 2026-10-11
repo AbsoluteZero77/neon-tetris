@@ -13,6 +13,8 @@ jobs:
         with: { distribution: temurin, java-version: 17 }
       - run: npm install
       - run: npx cap add android
+      - run: pip install pillow && python make_icon.py
+      - run: npx -y @capacitor/assets@3 generate --android --iconBackgroundColor '#0a0a1c' --iconBackgroundColorDark '#0a0a1c'
       - run: sed -i 's/<activity/<activity android:screenOrientation="portrait"/' android/app/src/main/AndroidManifest.xml
       - run: npx cap sync android
       - run: cd android && chmod +x gradlew && ./gradlew assembleDebug
