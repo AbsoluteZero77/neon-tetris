@@ -22,10 +22,10 @@ html,body{height:100%;margin:0;overflow:hidden;color:#eef0ff;font-family:"Trebuc
 #toast{position:absolute;top:30%;left:0;right:0;text-align:center;font-size:30px;font-weight:900;pointer-events:none;opacity:0;text-shadow:0 0 18px var(--acc)}
 #toast.go{animation:t .9s ease-out}
 @keyframes t{0%{opacity:0;transform:scale(.6)}20%{opacity:1;transform:scale(1.1)}100%{opacity:0;transform:translateY(-30px)}}
-.ctl{display:flex;gap:7px}
-.ctl button{flex:1;height:72px;border-radius:16px;border:1px solid rgba(255,255,255,.14);background:linear-gradient(#2a2a55,#14142e);color:#fff;font-size:26px;box-shadow:0 4px 0 #080818}
+.ctl{display:flex;gap:10px;padding:2px 2px 6px}.ctl [data-a=cw]{flex:1.3}
+.ctl button{flex:1;height:86px;border-radius:16px;border:1px solid rgba(255,255,255,.14);background:linear-gradient(#2a2a55,#14142e);color:#fff;font-size:32px;box-shadow:0 4px 0 #080818}
 .ctl button:active{transform:translateY(3px);box-shadow:0 1px 0 #080818;border-color:var(--acc)}
-.ctl .gap{flex:.25}
+.ctl .gap{flex:.45}
 #ov{position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(5,5,14,.82);backdrop-filter:blur(6px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:5;text-align:center;padding:20px}
 #ov h1{margin:0;font-size:44px;letter-spacing:2px;text-shadow:0 0 24px var(--acc)}
 #ov p{margin:0;color:var(--dim);font-size:15px;line-height:1.5}
@@ -42,10 +42,9 @@ html,body{height:100%;margin:0;overflow:hidden;color:#eef0ff;font-family:"Trebuc
  <div id="wrap"><canvas id="board"></canvas><div id="toast"></div></div>
  <div class="util"><button id="pause">⏸ Pause</button><button id="mute">🔊</button><button id="ctb">🎮</button></div>
  <div class="ctl">
-  <button data-a="l">◀</button><button data-a="d">▼</button><button data-a="r">▶</button><span class="gap"></span>
-  <button data-a="ccw">↺</button><button data-a="cw">↻</button><button data-a="hd">⤓</button>
+  <button data-a="l">◀</button><button data-a="r">▶</button><span class="gap"></span><button data-a="cw">↻</button><button data-a="hd">⤓</button>
  </div>
- <div id="ov"><h1 id="ot">NEON TETRIS</h1><p id="os">Swipe to move · flick down to hard drop<br>tap left/right of board to rotate<br>swipe up or tap Hold to stash</p><button id="ob">Play</button></div>
+ <div id="ov"><h1 id="ot">NEON TETRIS</h1><p id="os">Swipe to move · flick down to hard drop<br>tap left/right of board to rotate<br>swipe up or tap Hold to stash<br>⤓ tap = hard drop · hold = soft drop</p><button id="ob">Play</button></div>
 </div>
 <script>
 if(!CanvasRenderingContext2D.prototype.roundRect)CanvasRenderingContext2D.prototype.roundRect=function(x,y,w,h,r){r=Math.min(r,w/2,h/2);this.moveTo(x+r,y);this.arcTo(x+w,y,x+w,y+h,r);this.arcTo(x+w,y+h,x,y+h,r);this.arcTo(x,y+h,x,y,r);this.arcTo(x,y,x+w,y,r);this.closePath()};
@@ -106,7 +105,7 @@ function draw(){const c=bc,s=cs;c.setTransform(dpr,0,0,dpr,0,0);c.clearRect(0,0,
  parts.forEach(a=>{c.globalAlpha=Math.max(a.l,0);c.fillStyle=a.c;c.fillRect(a.x*s-2,a.y*s-2,4,4)});c.globalAlpha=1;c.restore()}
 let last=0;function loop(t){requestAnimationFrame(loop);try{const dt=Math.min(t-last,50);last=t;update(dt);draw()}catch(e){}}
 function rep(b,fn,first,gap){let a,b2;const st=()=>{clearTimeout(a);clearInterval(b2)};b.addEventListener('pointerdown',e=>{e.preventDefault();vib(6);fn();a=setTimeout(()=>{b2=setInterval(fn,gap)},first)});['pointerup','pointercancel','pointerleave'].forEach(v=>b.addEventListener(v,st))}
-document.querySelectorAll('.ctl button').forEach(b=>{const a=b.dataset.a;if(a==='l')rep(b,()=>move(-1),130,42);else if(a==='r')rep(b,()=>move(1),130,42);else if(a==='d')rep(b,soft,0,45);else b.addEventListener('pointerdown',e=>{e.preventDefault();a==='cw'?turn(1):a==='ccw'?turn(-1):hard()})});
+document.querySelectorAll('.ctl button').forEach(b=>{const a=b.dataset.a;if(a==='l')rep(b,()=>move(-1),130,42);else if(a==='r')rep(b,()=>move(1),130,42);else if(a==='cw')b.addEventListener('pointerdown',e=>{e.preventDefault();vib(6);turn(1)});else{let t1,t2,held=false;const st=()=>{clearTimeout(t1);clearInterval(t2)};b.addEventListener('pointerdown',e=>{e.preventDefault();held=false;t1=setTimeout(()=>{held=true;t2=setInterval(soft,45)},170)});b.addEventListener('pointerup',()=>{const h=held;st();if(!h)hard()});['pointercancel','pointerleave'].forEach(v=>b.addEventListener(v,st))}});
 const bd=$('#board');let T=null;
 bd.addEventListener('pointerdown',e=>{try{bd.setPointerCapture(e.pointerId)}catch(_){}T={x:e.clientX,y:e.clientY,t:performance.now(),ax:e.clientX,ay:e.clientY,moved:false}});
 bd.addEventListener('pointermove',e=>{if(!T)return;const dx=e.clientX-T.ax,dy=e.clientY-T.ay;if(Math.abs(dx)>cs*.7&&Math.abs(dx)>=Math.abs(dy)*.6){move(dx>0?1:-1);T.ax=e.clientX;T.moved=true}if(dy>cs*.6&&Math.abs(dy)>Math.abs(dx)){soft();T.ay=e.clientY;T.moved=true}});
